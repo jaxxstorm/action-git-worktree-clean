@@ -4,7 +4,14 @@ import * as path from 'path'
 
 async function run(): Promise<void> {
   try {
-    git.Repository.open(path.resolve(__dirname)).then(function(repo) {
+    const workdir = process.env['GITHUB_WORKSPACE']
+    if (!workdir) {
+      throw new Error(
+        `No workspace found, please use the checkout action and run in github actions`
+      )
+    }
+
+    git.Repository.open(path.resolve(workdir)).then(function(repo) {
       repo.getStatus().then(function(statuses) {
         function statusToText(status: git.StatusFile): string {
           const words = []
