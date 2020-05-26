@@ -14,4 +14,5 @@ jobs:
     - run: |
         npm install
         npm run all
+    - run: touch test
     - uses: ./

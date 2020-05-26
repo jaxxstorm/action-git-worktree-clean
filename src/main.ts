@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import * as git from 'nodegit'
-import * as path from 'path'
+import * as git from 'isomorphic-git'
+import * as fs from 'fs'
 
 async function run(): Promise<void> {
   try {
@@ -11,36 +11,32 @@ async function run(): Promise<void> {
       )
     }
 
-    const repodir = path.resolve(workdir)
-    core.debug(`Using directory: ${repodir}`)
+    // see https://isomorphic-git.org/docs/en/statusMatrix for definitions
+    const FILE = 0,
+      HEAD = 1,
+      WORKDIR = 2
 
-    git.Repository.open(repodir).then(function(repo) {
-      repo.getStatus().then(function(statuses) {
-        function statusToText(status: git.StatusFile): string {
-          const words = []
-          if (status.isNew()) {
-            words.push('NEW')
-          }
-          if (status.isModified()) {
-            words.push('MODIFIED')
-          }
-          if (status.isTypechange()) {
-            words.push('TYPECHANGE')
-          }
-          if (status.isRenamed()) {
-            words.push('RENAMED')
-          }
-          if (status.isIgnored()) {
-            words.push('IGNORED')
-          }
-
-          return words.join(' ')
-        }
-        for (const s of statuses) {
-          core.warning(`${s.path()} ${statusToText(s)}`)
-        }
+    // get all the changed files asynchronously
+    const changed = (
+      await git.statusMatrix({
+        fs,
+        dir: workdir
       })
-    })
+    )
+      .filter(row => row[HEAD] !== row[WORKDIR])
+      .map(row => row[FILE])
+
+    /* If the changed array is greater than 0
+    then we must have changed files
+    */
+    if (changed.length > 0) {
+      for (const status of changed) {
+        core.warning(status)
+      }
+      core.setOutput('clean', 'false')
+    } else {
+      core.setOutput('clean', 'true')
+    }
   } catch (error) {
     core.setFailed(error.message)
   }
