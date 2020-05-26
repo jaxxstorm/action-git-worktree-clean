@@ -1,6 +1,11 @@
 name: 'action-git-worktree-clean'
 description: 'Checks the status of your git worktree'
 author: 'Lee Briggs'
+inputs:
+  fail-on-unclean:
+    description: Whether to fail the job if changes are detected
+    required: true
+    default: 'true'
 outputs:
   clean:
     description: 'If the worktree is clean or not'

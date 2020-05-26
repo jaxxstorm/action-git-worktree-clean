@@ -2564,6 +2564,9 @@ function run() {
                     core.warning(status);
                 }
                 core.setOutput('clean', 'false');
+                if (core.getInput('fail-on-unclean') === 'true') {
+                    core.setFailed('Changes detected and failure enabled');
+                }
             }
             else {
                 core.setOutput('clean', 'true');
