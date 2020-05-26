@@ -1,16 +1,36 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import * as git from 'nodegit'
+import * as path from 'path'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    git.Repository.open(path.resolve(__dirname)).then(function(repo) {
+      repo.getStatus().then(function(statuses) {
+        function statusToText(status: git.StatusFile): string {
+          const words = []
+          if (status.isNew()) {
+            words.push('NEW')
+          }
+          if (status.isModified()) {
+            words.push('MODIFIED')
+          }
+          if (status.isTypechange()) {
+            words.push('TYPECHANGE')
+          }
+          if (status.isRenamed()) {
+            words.push('RENAMED')
+          }
+          if (status.isIgnored()) {
+            words.push('IGNORED')
+          }
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
+          return words.join(' ')
+        }
+        for (const s of statuses) {
+          core.warning(`${s.path()} ${statusToText(s)}`)
+        }
+      })
+    })
   } catch (error) {
     core.setFailed(error.message)
   }
