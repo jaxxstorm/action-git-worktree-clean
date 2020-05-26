@@ -11,7 +11,10 @@ async function run(): Promise<void> {
       )
     }
 
-    git.Repository.open(path.resolve(workdir)).then(function(repo) {
+    const repodir = path.resolve(workdir)
+    core.debug(`Using directory: ${repodir}`)
+
+    git.Repository.open(repodir).then(function(repo) {
       repo.getStatus().then(function(statuses) {
         function statusToText(status: git.StatusFile): string {
           const words = []
